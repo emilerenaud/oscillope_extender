@@ -1,0 +1,20 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: oscilloscope_ext.PcbDoc   2025-05-31  23:26:26
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : oscilloscope_ext-RoundHoles.TXT
+ASCII SlotHoles File : oscilloscope_ext-SlotHoles.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      0.3mm (12mil)                                             Round             65        PTH        456.65mm (17.98inch)
+T2      0.5mm (20mil)                                             Round             1         PTH        0.00mm (0.00inch)
+T3      1mm (39mil)                                               Round             17        PTH        88.36mm (3.48inch)
+T4      1.1mm (43mil)                                             Round             20        PTH        193.50mm (7.62inch)
+T5      2mm (79mil)                                               Slot              8         PTH        289.57mm (11.40inch)
+T6      3.4mm (134mil)                                            Round             4         PTH        234.60mm (9.24inch)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              115
+
+Total Processing Time (hh:mm:ss) : 00:00:00
