@@ -2,19 +2,25 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_DotStar.h>
 #include <RotaryEncoder.h>
+#include "pi4ioe.h"
 
 #define NUM_ENCODERS 4
 
 Adafruit_NeoPixel strip(8,38, NEO_GRB + NEO_KHZ800);
-Adafruit_DotStar strip1(8, 34, 33, DOTSTAR_BRG);
+Adafruit_DotStar strip1(8, 34, 33, DOTSTAR_BGR);
 
 struct Color {
     uint8_t r, g, b;
 };
+int mappingLED[8] = {0,7,1,6,2,5,3,4};
 const Color buttonColors[8] = {
     {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0},
     {255, 0, 255}, {0, 255, 255}, {255, 165, 0}, {255, 255, 255}
 };
+
+PI4IOE::PI4IOE io_expander;
+void IRAM_ATTR ISR_button(void);
+bool int_received = 0;
 
 const int pinA[NUM_ENCODERS] = {37, 2, 10, 7};
 const int pinB[NUM_ENCODERS] = {36, 1, 9, 6};
@@ -48,11 +54,11 @@ void setup() {
 //  LED setup
  strip.begin();           
  strip.show();            
- strip.setBrightness(40);
+ strip.setBrightness(10);
 
  strip1.begin();           
  strip1.show();            
- strip1.setBrightness(40); 
+ strip1.setBrightness(10); 
 
  delay(500);
  initColor();
@@ -64,6 +70,16 @@ void setup() {
     lastStateA[i] = digitalRead(pinA[i]);
     lastAB[i] = (digitalRead(pinA[i]) << 1) | digitalRead(pinB[i]);
   }
+
+  Wire.begin(11, 12, 100000);
+  io_expander.begin(0x43, &Wire);
+  io_expander.write_register(PI4IOE::PULL_UP_DOWN_SELECT,B11111111);
+  io_expander.write_register(PI4IOE::PULL_UP_DOWN_ENABLE,B11111111);
+  io_expander.write_register(PI4IOE::INPUT_DEFAULT_STATE,B11111111);
+  io_expander.write_register(PI4IOE::INTERRUPT_MASK,B00000000);
+  io_expander.read_register(PI4IOE::INTERRUPT_STATUS);
+  pinMode(13,INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(13),ISR_button,FALLING);
 }
 
 void loop() {
@@ -95,6 +111,24 @@ void loop() {
         }
     }
   pollButtons();
+
+  if(int_received)
+  {
+    int_received = 0;
+    uint8_t switch_status = io_expander.read_register(PI4IOE::INTERRUPT_STATUS);
+    int buttonIndex = -1;
+
+    for (int i = 0; i < 8; i++) {
+        if (switch_status & (1 << i)) {
+            buttonIndex = i;
+            strip.fill(strip.Color(buttonColors[mappingLED[i]].r,buttonColors[mappingLED[i]].g,buttonColors[mappingLED[i]].b));
+            strip.show();
+            Serial.printf("Button %d pressed\n", i);
+            break;  // On prend le premier bouton actif
+        }
+    }
+
+  }
 }
 
 void initColor()
@@ -131,6 +165,15 @@ void pollButtons() {
             }
         }
     }
+}
+
+void ISR_button()
+{
+  // Serial.println("xd");
+  int_received = 1;
+  // Serial.println(io_expander.read_register(PI4IOE::INTERRUPT_STATUS));
+  // uint8_t switch_status = io_expander.read_register(PI4IOE::INTERRUPT_STATUS);
+  // Serial.println(switch_status,BIN);
 }
 
 
