@@ -3,11 +3,16 @@
 #include <Adafruit_DotStar.h>
 #include <RotaryEncoder.h>
 #include "pi4ioe.h"
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define NUM_ENCODERS 4
 
 Adafruit_NeoPixel strip(8,38, NEO_GRB + NEO_KHZ800);
 Adafruit_DotStar strip1(8, 34, 33, DOTSTAR_BGR);
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
 struct Color {
     uint8_t r, g, b;
@@ -73,13 +78,20 @@ void setup() {
 
   Wire.begin(11, 12, 100000);
   io_expander.begin(0x43, &Wire);
-  io_expander.write_register(PI4IOE::PULL_UP_DOWN_SELECT,B11111111);
-  io_expander.write_register(PI4IOE::PULL_UP_DOWN_ENABLE,B11111111);
-  io_expander.write_register(PI4IOE::INPUT_DEFAULT_STATE,B11111111);
-  io_expander.write_register(PI4IOE::INTERRUPT_MASK,B00000000);
+  io_expander.write_register(PI4IOE::PULL_UP_DOWN_SELECT,0b11111111);
+  io_expander.write_register(PI4IOE::PULL_UP_DOWN_ENABLE,0b11111111);
+  io_expander.write_register(PI4IOE::INPUT_DEFAULT_STATE,0b11111111);
+  io_expander.write_register(PI4IOE::INTERRUPT_MASK,0b00000000);
   io_expander.read_register(PI4IOE::INTERRUPT_STATUS);
   pinMode(13,INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(13),ISR_button,FALLING);
+
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  Serial.println("test");
+  display.display();      // Show initial text
 }
 
 void loop() {
